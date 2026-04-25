@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>代行みっけ｜SNS代行業者のためのクライアント設計AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Shippori+Mincho:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#1a2d4a;
+  --navy-deep:#0f1d33;
+  --orange:#ff8c42;
+  --orange-soft:#ffb380;
+  --cream:#fdfaf5;
+  --gray-light:#f3f4f7;
+  --gray-mid:#9ca3af;
+  --gray-dark:#374151;
+  --text:#1f2937;
+  --line:#e5e7eb;
+  --shadow:0 4px 24px rgba(26,45,74,.08);
+  --shadow-strong:0 8px 32px rgba(26,45,74,.18);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{font-family:'Zen Kaku Gothic New',sans-serif;color:var(--text);background:var(--cream);line-height:1.7;-webkit-font-smoothing:antialiased}
+body{min-height:100vh}
+
+.header{background:linear-gradient(135deg,var(--navy) 0%,var(--navy-deep) 100%);color:#fff;padding:18px 24px;position:sticky;top:0;z-index:100;box-shadow:var(--shadow-strong)}
+.header-inner{max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:10px;font-weight:900;font-size:18px;letter-spacing:.02em}
+.logo-mark{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--orange),var(--orange-soft));display:flex;align-items:center;justify-content:center;font-size:18px}
+.logo-sub{font-size:11px;font-weight:400;opacity:.8;margin-top:2px;letter-spacing:.05em}
+.header-actions{display:flex;gap:8px;align-items:center}
+.btn-icon{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;padding:8px 14px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;transition:all .2s;font-family:inherit}
+.btn-icon:hover{background:rgba(255,255,255,.22);transform:translateY(-1px)}
+
+.client-bar{background:#fff;border-bottom:2px solid var(--line);padding:14px 24px;position:sticky;top:74px;z-index:90;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.client-bar-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.client-bar-label{font-size:11px;font-weight:700;color:var(--navy);letter-spacing:.1em;background:var(--gray-light);padding:4px 10px;border-radius:4px}
+.client-select{flex:1;min-width:200px;padding:10px 14px;border:2px solid var(--line);border-radius:10px;font-size:15px;font-weight:600;color:var(--navy);background:#fff;cursor:pointer;font-family:inherit;transition:all .2s}
+.client-select:hover{border-color:var(--orange)}
+.client-select:focus{outline:none;border-color:var(--orange);box-shadow:0 0 0 3px rgba(255,140,66,.15)}
+.btn-add{background:var(--orange);color:#fff;border:none;padding:10px 16px;border-radius:10px;cursor:pointer;font-weight:700;font-size:13px;transition:all .2s;box-shadow:0 2px 8px rgba(255,140,66,.3);font-family:inherit}
+.btn-add:hover{background:#ff7a26;transform:translateY(-1px);box-shadow:0 4px 12px rgba(255,140,66,.4)}
+.btn-ghost{background:transparent;color:var(--gray-dark);border:1px solid var(--line);padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:500;font-size:13px;transition:all .2s;font-family:inherit}
+.btn-ghost:hover{background:var(--gray-light);color:var(--navy)}
+
+.main{max-width:1200px;margin:0 auto;padding:32px 24px 80px}
+
+.hero{background:linear-gradient(135deg,#fff 0%,var(--cream) 100%);border:1px solid var(--line);border-radius:20px;padding:32px;margin-bottom:24px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-40px;right:-40px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(255,140,66,.12) 0%,transparent 70%)}
+.hero h1{font-family:'Shippori Mincho',serif;font-size:30px;font-weight:700;color:var(--navy);margin-bottom:14px;line-height:1.4;letter-spacing:.02em;position:relative}
+.hero p{color:var(--gray-dark);font-size:15px;max-width:700px;position:relative}
+.hero-tag{display:inline-block;background:var(--navy);color:#fff;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.1em;margin-bottom:16px}
+
+.tabs{display:flex;gap:4px;background:#fff;padding:6px;border-radius:14px;box-shadow:var(--shadow);margin-bottom:24px;overflow-x:auto}
+.tab{flex:1;min-width:140px;padding:14px 16px;border-radius:10px;background:transparent;border:none;cursor:pointer;font-weight:700;font-size:14px;color:var(--gray-mid);transition:all .2s;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:4px}
+.tab:hover{background:var(--gray-light);color:var(--navy)}
+.tab.active{background:linear-gradient(135deg,var(--navy),var(--navy-deep));color:#fff;box-shadow:0 4px 12px rgba(26,45,74,.25)}
+.tab-num{font-size:11px;opacity:.7;font-weight:500}
+.tab.active .tab-num{opacity:1}
+
+.panel{background:#fff;border-radius:18px;padding:32px;box-shadow:var(--shadow);display:none}
+.panel.active{display:block;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+.panel-title{font-family:'Shippori Mincho',serif;font-size:22px;font-weight:700;color:var(--navy);margin-bottom:8px;letter-spacing:.02em}
+.panel-desc{color:var(--gray-mid);font-size:14px;margin-bottom:24px}
+
+.field{margin-bottom:18px}
+.field label{display:block;font-weight:700;font-size:13px;color:var(--navy);margin-bottom:6px;letter-spacing:.02em}
+.field input,.field select,.field textarea{width:100%;padding:11px 14px;border:1.5px solid var(--line);border-radius:10px;font-size:14px;font-family:inherit;background:#fff;transition:all .2s;color:var(--text)}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--orange);box-shadow:0 0 0 3px rgba(255,140,66,.12)}
+.field textarea{resize:vertical;min-height:90px;line-height:1.6}
+.field-hint{font-size:11px;color:var(--gray-mid);margin-top:4px}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:600px){.field-row{grid-template-columns:1fr}}
+
+.tone-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+@media(max-width:600px){.tone-grid{grid-template-columns:repeat(2,1fr)}}
+.tone-btn{padding:10px 6px;border:1.5px solid var(--line);border-radius:10px;background:#fff;cursor:pointer;font-size:12px;font-weight:600;color:var(--gray-dark);transition:all .15s;font-family:inherit}
+.tone-btn:hover{border-color:var(--orange);color:var(--orange)}
+.tone-btn.active{background:var(--navy);color:#fff;border-color:var(--navy);box-shadow:0 4px 10px rgba(26,45,74,.2)}
+
+.btn-primary{background:linear-gradient(135deg,var(--orange) 0%,#ff7a26 100%);color:#fff;border:none;padding:16px 32px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;width:100%;transition:all .2s;font-family:inherit;box-shadow:0 4px 14px rgba(255,140,66,.35);letter-spacing:.05em}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(255,140,66,.45)}
+.btn-primary:active{transform:translateY(0)}
+.btn-save{background:var(--navy);color:#fff;border:none;padding:13px 24px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s}
+.btn-save:hover{background:var(--navy-deep)}
+
+.output-section{margin-top:32px;padding-top:24px;border-top:1px dashed var(--line)}
+.output-block{background:var(--gray-light);border-radius:12px;padding:18px;margin-bottom:14px;position:relative}
+.output-label{font-size:11px;font-weight:700;color:var(--navy);letter-spacing:.1em;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.output-content{background:#fff;padding:14px;border-radius:8px;font-size:13.5px;line-height:1.8;white-space:pre-wrap;border:1px solid var(--line);min-height:24px;word-break:break-word}
+.copy-btn{position:absolute;top:14px;right:14px;background:#fff;border:1px solid var(--line);padding:5px 12px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:600;color:var(--navy);transition:all .15s;font-family:inherit}
+.copy-btn:hover{background:var(--navy);color:#fff;border-color:var(--navy)}
+.copy-btn.copied{background:#10b981;color:#fff;border-color:#10b981}
+
+.loading{display:none;text-align:center;padding:32px}
+.loading.show{display:block}
+.loading-emoji{font-size:36px;animation:bounce 1s ease infinite}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.loading-text{margin-top:12px;color:var(--gray-mid);font-size:13px}
+
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(15,29,51,.6);backdrop-filter:blur(4px);z-index:200;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.show{display:flex}
+.modal{background:#fff;border-radius:20px;padding:28px;max-width:500px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal-title{font-family:'Shippori Mincho',serif;font-size:20px;font-weight:700;color:var(--navy);margin-bottom:8px}
+.modal-desc{font-size:13px;color:var(--gray-mid);margin-bottom:18px}
+.modal-actions{display:flex;gap:10px;margin-top:20px}
+.modal-actions button{flex:1}
+
+.proposal{background:#fff;border:2px solid var(--navy);border-radius:16px;padding:32px;font-family:'Shippori Mincho',serif}
+.proposal-header{text-align:center;border-bottom:2px solid var(--navy);padding-bottom:18px;margin-bottom:24px}
+.proposal-header h2{font-size:24px;color:var(--navy);font-weight:700}
+.proposal-header p{font-size:12px;color:var(--gray-mid);margin-top:6px;font-family:'Zen Kaku Gothic New',sans-serif}
+.proposal-section{margin-bottom:22px}
+.proposal-section h3{font-size:15px;color:var(--orange);border-left:4px solid var(--orange);padding-left:10px;margin-bottom:10px;font-family:'Zen Kaku Gothic New',sans-serif}
+.proposal-section p{font-size:13px;line-height:1.9;white-space:pre-wrap}
+.proposal-footer{margin-top:30px;padding-top:18px;border-top:1px solid var(--line);text-align:right;font-size:11px;color:var(--gray-mid);font-family:'Zen Kaku Gothic New',sans-serif}
+@media print{
+  .header,.client-bar,.tabs,.btn-icon,.copy-btn,.print-hide{display:none!important}
+  body{background:#fff}
+  .panel{box-shadow:none;padding:0}
+  .proposal{border:none}
+}
+
+.empty-state{text-align:center;padding:60px 24px;color:var(--gray-mid)}
+.empty-emoji{font-size:48px;margin-bottom:14px;opacity:.5}
+.empty-title{font-size:16px;font-weight:700;color:var(--navy);margin-bottom:6px}
+.empty-desc{font-size:13px}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--navy);color:#fff;padding:12px 24px;border-radius:30px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.2);z-index:300;transition:transform .3s ease}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+.footer{text-align:center;padding:32px 24px;color:var(--gray-mid);font-size:12px;border-top:1px solid var(--line);margin-top:40px}
+.footer strong{color:var(--navy)}
+
+.demo-banner{background:linear-gradient(90deg,#fff5e6,#ffe4cc);border:1px dashed var(--orange);padding:10px 16px;border-radius:10px;margin-bottom:20px;font-size:12.5px;color:var(--gray-dark);text-align:center}
+.demo-banner strong{color:var(--orange)}
+
+@media(max-width:768px){
+  .hero{padding:24px}
+  .hero h1{font-size:22px}
+  .panel{padding:22px}
+  .panel-title{font-size:18px}
+  .tab{min-width:100px;padding:12px 8px;font-size:12px}
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-inner">
+    <div>
+      <div class="logo">
+        <div class="logo-mark">🎯</div>
+        <div>
+          代行みっけ
+          <div class="logo-sub">SNS代行業者のためのクライアント設計AI</div>
+        </div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn-icon" onclick="openHelp()">📖 使い方</button>
+      <button class="btn-icon" onclick="resetAll()">🔄 全リセット</button>
+    </div>
+  </div>
+</header>
+
+<div class="client-bar">
+  <div class="client-bar-inner">
+    <span class="client-bar-label">CLIENT</span>
+    <select class="client-select" id="clientSelect" onchange="switchClient(this.value)">
+      <option value="">クライアントを選択してください</option>
+    </select>
+    <button class="btn-add" onclick="openAddClient()">＋ 新規追加</button>
+    <button class="btn-ghost" onclick="loadDemoClient()">🎯 デモデータ</button>
+    <button class="btn-ghost" onclick="deleteCurrentClient()">🗑️ 削除</button>
+  </div>
+</div>
+
+<main class="main">
+
+  <div class="hero">
+    <div class="hero-tag">🎯 みっけシリーズ</div>
+    <h1>クライアントのSNSブランド、5分で整える。</h1>
+    <p>代行業の最初の壁、それは「クライアントのプロフィール設計」。<br>このアプリは、あなたが扱うクライアント1社1社のブランドをAIが一気に設計し、<br>そのまま提案書として出力します。考えるを、ひとりにしない。</p>
+  </div>
+
+  <div class="demo-banner">
+    🧪 <strong>APIなしデモ版</strong>　現在はテンプレートでサンプル出力を生成しています。本番ではAIが個別最適な文章を生成します。
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab(0)">
+      <span class="tab-num">STEP 01</span>
+      <span>📋 クライアント情報</span>
+    </button>
+    <button class="tab" onclick="switchTab(1)">
+      <span class="tab-num">STEP 02</span>
+      <span>✨ プロフィール生成</span>
+    </button>
+    <button class="tab" onclick="switchTab(2)">
+      <span class="tab-num">STEP 03</span>
+      <span>📱 初投稿サンプル</span>
+    </button>
+    <button class="tab" onclick="switchTab(3)">
+      <span class="tab-num">STEP 04</span>
+      <span>📄 提案書出力</span>
+    </button>
+  </div>
+
+  <div class="panel active" id="panel0">
+    <h2 class="panel-title">📋 クライアントカルテ</h2>
+    <p class="panel-desc">クライアントから聞き出した情報を入力してください。ここがすべての出力の元になります。入力内容は自動保存されます。</p>
+
+    <div id="emptyClient" class="empty-state" style="display:none">
+      <div class="empty-emoji">👋</div>
+      <div class="empty-title">まずはクライアントを追加しましょう</div>
+      <div class="empty-desc">上の「＋ 新規追加」または「🎯 デモデータ」ボタンから始められます</div>
+    </div>
+
+    <div id="clientForm">
+      <div class="field-row">
+        <div class="field">
+          <label>屋号 / 会社名 / 店舗名 <span style="color:#ff5252">*</span></label>
+          <input type="text" id="f_name" placeholder="例：cafe ひとやすみ">
+        </div>
+        <div class="field">
+          <label>業種</label>
+          <select id="f_industry">
+            <option value="">選択してください</option>
+            <option>飲食店</option>
+            <option>美容室・サロン</option>
+            <option>士業（税理士・弁護士・社労士等）</option>
+            <option>製造業</option>
+            <option>小売・物販</option>
+            <option>医療・クリニック</option>
+            <option>不動産</option>
+            <option>整体・治療院</option>
+            <option>習い事・教室</option>
+            <option>サービス業</option>
+            <option>その他</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>地域</label>
+          <input type="text" id="f_area" placeholder="例：東京都目黒区中目黒">
+        </div>
+        <div class="field">
+          <label>ターゲット顧客像</label>
+          <input type="text" id="f_target" placeholder="例：30代女性会社員 リモートワーカー">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>ブランドの想い・こだわり <span style="color:#ff5252">*</span></label>
+        <textarea id="f_concept" placeholder="例：地元産の野菜を使った丁寧な定食を、忙しい人に届けたい。家庭の延長のような場所に。"></textarea>
+      </div>
+
+      <div class="field">
+        <label>得意なメニュー・サービス・商品</label>
+        <textarea id="f_strength" placeholder="例：日替わり定食、自家製パン、季節のスープ、コーヒー豆の量り売り"></textarea>
+      </div>
+
+      <div class="field">
+        <label>希望のブランドトーン</label>
+        <div class="tone-grid">
+          <button type="button" class="tone-btn" data-tone="上品" onclick="selectTone(this)">🎩 上品</button>
+          <button type="button" class="tone-btn" data-tone="親しみ" onclick="selectTone(this)">🤝 親しみ</button>
+          <button type="button" class="tone-btn" data-tone="専門的" onclick="selectTone(this)">🎓 専門的</button>
+          <button type="button" class="tone-btn" data-tone="可愛い" onclick="selectTone(this)">🌸 可愛い</button>
+          <button type="button" class="tone-btn" data-tone="クール" onclick="selectTone(this)">⚡ クール</button>
+        </div>
+        <input type="hidden" id="f_tone">
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>NGワード（カンマ区切り）</label>
+          <input type="text" id="f_ng" placeholder="例：激安, 最安, セール">
+        </div>
+        <div class="field">
+          <label>既存SNSアカウント（あれば）</label>
+          <input type="text" id="f_sns" placeholder="例：@hitoyasumi_cafe">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>販売・予約・公式サイトURL</label>
+        <input type="text" id="f_url" placeholder="例：https://hitoyasumi.com">
+        <div class="field-hint">プロフィールに掲載するメインリンク</div>
+      </div>
+
+      <button class="btn-save" onclick="saveCurrentClient()">💾 このクライアントを保存</button>
+    </div>
+  </div>
+
+  <div class="panel" id="panel1">
+    <h2 class="panel-title">✨ プロフィール一括生成</h2>
+    <p class="panel-desc">クライアント情報をもとに、Instagram・X・Threadsの3媒体分のプロフィール一式をまとめて作ります。</p>
+
+    <button class="btn-primary" onclick="generateProfile()">✨ プロフィール一式を生成する</button>
+
+    <div class="loading" id="loading1">
+      <div class="loading-emoji">🪄</div>
+      <div class="loading-text">AIがブランド設計を組み立てています...</div>
+    </div>
+
+    <div class="output-section" id="outProfile" style="display:none">
+      <div class="output-block">
+        <div class="output-label">💡 Instagramアカウント名候補（3案）</div>
+        <button class="copy-btn" onclick="copyText('o_acct',this)">📋 コピー</button>
+        <div class="output-content" id="o_acct"></div>
+      </div>
+      <div class="output-block">
+        <div class="output-label">📷 Instagramプロフィール文（150字）</div>
+        <button class="copy-btn" onclick="copyText('o_igprof',this)">📋 コピー</button>
+        <div class="output-content" id="o_igprof"></div>
+      </div>
+      <div class="output-block">
+        <div class="output-label">🐦 Xプロフィール文（160字）</div>
+        <button class="copy-btn" onclick="copyText('o_xprof',this)">📋 コピー</button>
+        <div class="output-content" id="o_xprof"></div>
+      </div>
+      <div class="output-block">
+        <div class="output-label">🧵 Threadsプロフィール文（少し長め）</div>
+        <button class="copy-btn" onclick="copyText('o_thprof',this)">📋 コピー</button>
+        <div class="output-content" id="o_thprof"></div>
+      </div>
+      <div class="output-block">
+        <div class="output-label">🏷️ Instagramハイライト見出し案（5つ）</div>
+        <button class="copy-btn" onclick="copyText('o_hl',this)">📋 コピー</button>
+        <div class="output-content" id="o_hl"></div>
+      </div>
+      <div class="output-block">
+        <div class="output-label">🔗 ストーリーズ誘導文</div>
+        <button class="copy-btn" onclick="copyText('o_story',this)">📋 コピー</button>
+        <div class="output-content" id="o_story"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel2">
+    <h2 class="panel-title">📱 初投稿サンプル生成</h2>
+    <p class="panel-desc">アカウント開設後の最初の3投稿テンプレと、推奨ハッシュタグ30個を生成します。</p>
+
+    <button class="btn-primary" onclick="generatePosts()">✨ 初投稿セットを生成する</button>
+
+    <div class="loading" id="loading2">
+      <div class="loading-emoji">📝</div>
+      <div class="loading-text">投稿テンプレを編んでいます...</div>
+    </div>
+
+    <div class="output-section" id="outPosts" style="display:none">
+      <div class="output-block">
+        <div class="output-label">📌 投稿1：アカウント開設のあいさつ</div>
+        <button class="copy-btn" onclick="copyText('o_post1',this)">📋 コピー</button>
+        <div class="output-content" id="o_post1"></div>
+      </div>
+      <div class="output-block">
+        <div class="output-label">📌 投稿2：こだわり・想いを伝える</div>
+        <button class="copy-btn" onclick="copyText('o_post2',this)">📋 コピー</button>
+        <div class="output-content" id="o_post2"></div>
+      </div>
+      <div class="output-block">
+        <div class="output-label">📌 投稿3：商品・サービスの紹介</div>
+        <button class="copy-btn" onclick="copyText('o_post3',this)">📋 コピー</button>
+        <div class="output-content" id="o_post3"></div>
+      </div>
+      <div class="output-block">
+        <div class="output-label">#️⃣ 推奨ハッシュタグ30個</div>
+        <button class="copy-btn" onclick="copyText('o_tags',this)">📋 コピー</button>
+        <div class="output-content" id="o_tags"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel3">
+    <h2 class="panel-title">📄 クライアント提案書</h2>
+    <p class="panel-desc">ここまでの内容を1枚の提案書にまとめます。印刷／PDF保存してクライアントへの初回提案資料として使えます。</p>
+
+    <div class="print-hide" style="margin-bottom:20px;display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn-save" onclick="window.print()">🖨️ 印刷 / PDF保存</button>
+      <button class="btn-ghost" onclick="copyProposal()">📋 全文コピー</button>
+    </div>
+
+    <div class="proposal" id="proposalDoc">
+      <div class="empty-state">
+        <div class="empty-emoji">📄</div>
+        <div class="empty-title">まだ生成データがありません</div>
+        <div class="empty-desc">STEP 02・03 で生成してから、この画面に戻ってください</div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<div class="modal-overlay" id="addClientModal">
+  <div class="modal">
+    <div class="modal-title">＋ 新規クライアント追加</div>
+    <p class="modal-desc">クライアント名（屋号・会社名）を入力してください。後から変更できます。</p>
+    <div class="field">
+      <label>クライアント名</label>
+      <input type="text" id="newClientName" placeholder="例：cafe ひとやすみ">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeAddClient()">キャンセル</button>
+      <button class="btn-save" onclick="addClient()">追加する</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="helpModal">
+  <div class="modal">
+    <div class="modal-title">📖 代行みっけの使い方</div>
+    <div style="font-size:13.5px;line-height:1.9;color:var(--gray-dark)">
+      <p><strong style="color:var(--navy)">STEP 01</strong> 上部「＋ 新規追加」でクライアントを登録</p>
+      <p><strong style="color:var(--navy)">STEP 02</strong> カルテに業種・想い・トーンを入力（自動保存）</p>
+      <p><strong style="color:var(--navy)">STEP 03</strong> 「プロフィール生成」「投稿サンプル」をAIが一括出力</p>
+      <p><strong style="color:var(--navy)">STEP 04</strong> 提案書タブから印刷・PDF保存してクライアントへ提出</p>
+      <p style="margin-top:14px;padding:12px;background:var(--gray-light);border-radius:8px;font-size:12px">
+        💡 複数クライアント登録OK。上部のセレクトで切替えれば、それぞれの情報・出力が独立して保持されます。
+      </p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-save" onclick="closeHelp()">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<footer class="footer">
+  🎯 <strong>代行みっけ</strong>｜Smile Plus Consulting<br>
+  「考えるを、ひとりにしない」
+</footer>
+
+<script>
+const STORAGE_KEY = 'dakou_mikke_v1';
+let appData = { clients: {}, currentId: null };
+let currentClient = null;
+
+function loadData(){
+  try{ const raw = localStorage.getItem(STORAGE_KEY); if(raw) appData = JSON.parse(raw); }catch(e){}
+}
+function saveData(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(appData)); }catch(e){}
+}
+
+function refreshClientSelect(){
+  const sel = document.getElementById('clientSelect');
+  const ids = Object.keys(appData.clients);
+  sel.innerHTML = '<option value="">クライアントを選択してください</option>' +
+    ids.map(id => `<option value="${id}" ${id===appData.currentId?'selected':''}>${escapeHtml(appData.clients[id].name||id)}</option>`).join('');
+}
+
+function switchClient(id){
+  if(!id){ currentClient=null; appData.currentId=null; saveData(); showEmpty(true); return; }
+  appData.currentId = id;
+  currentClient = appData.clients[id];
+  saveData();
+  loadFormFromClient();
+  showEmpty(false);
+  document.getElementById('outProfile').style.display = 'none';
+  document.getElementById('outPosts').style.display = 'none';
+  if(currentClient.profile) showProfileOutput(currentClient.profile);
+  if(currentClient.posts) showPostsOutput(currentClient.posts);
+  renderProposal();
+}
+
+function showEmpty(empty){
+  document.getElementById('emptyClient').style.display = empty ? 'block' : 'none';
+  document.getElementById('clientForm').style.display = empty ? 'none' : 'block';
+}
+
+function openAddClient(){
+  document.getElementById('newClientName').value = '';
+  document.getElementById('addClientModal').classList.add('show');
+  setTimeout(()=>document.getElementById('newClientName').focus(),50);
+}
+function closeAddClient(){ document.getElementById('addClientModal').classList.remove('show'); }
+
+function addClient(){
+  const name = document.getElementById('newClientName').value.trim();
+  if(!name){ toast('クライアント名を入力してください'); return; }
+  const id = 'c_' + Date.now();
+  appData.clients[id] = { name: name };
+  appData.currentId = id;
+  saveData();
+  refreshClientSelect();
+  switchClient(id);
+  closeAddClient();
+  toast('✅ クライアントを追加しました');
+}
+
+function deleteCurrentClient(){
+  if(!appData.currentId){ toast('クライアントが選択されていません'); return; }
+  if(!confirm(`「${appData.clients[appData.currentId].name}」を削除しますか？`)) return;
+  delete appData.clients[appData.currentId];
+  appData.currentId = null;
+  currentClient = null;
+  saveData();
+  refreshClientSelect();
+  showEmpty(true);
+  document.getElementById('outProfile').style.display = 'none';
+  document.getElementById('outPosts').style.display = 'none';
+  renderProposal();
+  toast('🗑️ 削除しました');
+}
+
+function loadDemoClient(){
+  const id = 'c_demo_' + Date.now();
+  appData.clients[id] = {
+    name: 'cafe ひとやすみ',
+    industry: '飲食店',
+    area: '東京都目黒区中目黒',
+    target: '30代女性会社員 リモートワーカー',
+    concept: '地元産の野菜を使った丁寧な定食を、忙しい人に届けたい。家庭の延長のような、ほっとできる場所を作りたい。化学調味料は使わず、出汁から手作りしています。',
+    strength: '日替わり定食、自家製パン、季節のスープ、ハンドドリップコーヒー、コーヒー豆の量り売り',
+    tone: '親しみ',
+    ng: '激安, 最安, セール',
+    sns: '@hitoyasumi_cafe',
+    url: 'https://hitoyasumi.com'
+  };
+  appData.currentId = id;
+  saveData();
+  refreshClientSelect();
+  switchClient(id);
+  toast('🎯 デモデータを読み込みました');
+}
+
+function loadFormFromClient(){
+  if(!currentClient) return;
+  document.getElementById('f_name').value = currentClient.name || '';
+  document.getElementById('f_industry').value = currentClient.industry || '';
+  document.getElementById('f_area').value = currentClient.area || '';
+  document.getElementById('f_target').value = currentClient.target || '';
+  document.getElementById('f_concept').value = currentClient.concept || '';
+  document.getElementById('f_strength').value = currentClient.strength || '';
+  document.getElementById('f_ng').value = currentClient.ng || '';
+  document.getElementById('f_sns').value = currentClient.sns || '';
+  document.getElementById('f_url').value = currentClient.url || '';
+  document.getElementById('f_tone').value = currentClient.tone || '';
+  document.querySelectorAll('.tone-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.tone===currentClient.tone);
+  });
+}
+
+function saveCurrentClient(){
+  if(!appData.currentId){ toast('クライアントが選択されていません'); return; }
+  const c = appData.clients[appData.currentId];
+  c.name = document.getElementById('f_name').value.trim() || c.name;
+  c.industry = document.getElementById('f_industry').value;
+  c.area = document.getElementById('f_area').value.trim();
+  c.target = document.getElementById('f_target').value.trim();
+  c.concept = document.getElementById('f_concept').value.trim();
+  c.strength = document.getElementById('f_strength').value.trim();
+  c.ng = document.getElementById('f_ng').value.trim();
+  c.sns = document.getElementById('f_sns').value.trim();
+  c.url = document.getElementById('f_url').value.trim();
+  c.tone = document.getElementById('f_tone').value;
+  currentClient = c;
+  saveData();
+  refreshClientSelect();
+  toast('💾 保存しました');
+}
+
+function selectTone(btn){
+  document.querySelectorAll('.tone-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('f_tone').value = btn.dataset.tone;
+  if(appData.currentId){
+    appData.clients[appData.currentId].tone = btn.dataset.tone;
+    saveData();
+  }
+}
+
+function switchTab(idx){
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',i===idx));
+  document.querySelectorAll('.panel').forEach((p,i)=>p.classList.toggle('active',i===idx));
+  if(idx===3) renderProposal();
+}
+
+function requireClient(){
+  if(!appData.currentId){ toast('まずクライアントを選択・追加してください'); return false; }
+  saveCurrentClient();
+  if(!currentClient.name || !currentClient.concept){
+    toast('屋号と「想い・こだわり」は必須です');
+    return false;
+  }
+  return true;
+}
+
+function getToneStyle(tone){
+  const map = {
+    '上品':{e1:'✨',e2:'🍃',ending:'お越しをお待ちしております。'},
+    '親しみ':{e1:'☺️',e2:'🌿',ending:'お気軽に遊びにきてくださいね😊'},
+    '専門的':{e1:'📘',e2:'⚙️',ending:'お問い合わせをお待ちしております。'},
+    '可愛い':{e1:'🌸',e2:'🎀',ending:'ぜひ覗いてみてくださいね💕'},
+    'クール':{e1:'⚡',e2:'◾',ending:'For more, follow us.'}
+  };
+  return map[tone] || map['親しみ'];
+}
+
+function generateProfile(){
+  if(!requireClient()) return;
+  const c = currentClient;
+  const t = getToneStyle(c.tone);
+  document.getElementById('loading1').classList.add('show');
+  document.getElementById('outProfile').style.display = 'none';
+
+  setTimeout(()=>{
+    const baseSlug = (c.name||'shop').replace(/\s+/g,'').toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,12) || 'shop';
+    const areaShort = (c.area||'').replace(/[都道府県市区町村]/g,'').slice(0,6);
+
+    const acct = `【強い】@${baseSlug}_official\n→ ブランド名直結で検索にヒットしやすい\n\n【魅力的】@${baseSlug}.${areaShort||'daily'}\n→ 地域感×ライフスタイル感が出る\n\n【わかりやすい】@${baseSlug}_${(c.industry||'shop').replace(/[・（）()]/g,'').slice(0,8)}\n→ 業種が一目でわかる安心感`;
+
+    const igProf = `${t.e1} ${c.name}\n${c.area?c.area+' / ':''}${c.industry||''}\n\n${shorten(c.concept,70)}\n\n${t.e2} ${shorten(c.strength||'',40)}\n\n▼ ご予約・詳細はこちら\n${c.url||'プロフィールリンクから'}`;
+
+    const xProf = `${c.name}｜${c.industry||''}${c.area?'｜'+c.area:''}\n${shorten(c.concept,80)}\n${c.target?'#'+c.target.replace(/\s+/g,'').slice(0,10):''} ${c.url||''}`.trim();
+
+    const thProf = `${c.name}です。${t.e1}\n\n${c.area?c.area+'で':''}${c.industry||''}をしています。\n\n${c.concept}\n\n${c.strength?'得意なのは：'+c.strength+'。':''}\n\n${c.target?c.target+'の方に':'みなさまに'}、ちょっとした幸せをお届けできたらうれしいです。\n${t.ending}`;
+
+    const hl = generateHighlights(c);
+
+    const story = `${t.e1} 詳しくはプロフィールから\n\n${c.name}の${pickStrengthWord(c.strength)}を\nぜひご覧ください${t.e2}\n\n→ プロフィールリンクをタップ`;
+
+    document.getElementById('o_acct').textContent = acct;
+    document.getElementById('o_igprof').textContent = igProf;
+    document.getElementById('o_xprof').textContent = xProf;
+    document.getElementById('o_thprof').textContent = thProf;
+    document.getElementById('o_hl').textContent = hl;
+    document.getElementById('o_story').textContent = story;
+
+    document.getElementById('loading1').classList.remove('show');
+    document.getElementById('outProfile').style.display = 'block';
+
+    currentClient.profile = { acct, igProf, xProf, thProf, hl, story };
+    saveData();
+    toast('✨ プロフィール一式を生成しました');
+  }, 1200);
+}
+
+function generateHighlights(c){
+  const industryMap = {
+    '飲食店':['📕 メニュー','🍽️ 本日のおすすめ','🪑 店内の様子','🚶 アクセス','💬 お客様の声'],
+    '美容室・サロン':['💇 スタイル集','✂️ メニュー・料金','🪞 スタッフ紹介','📅 ご予約','💕 お客様の声'],
+    '士業（税理士・弁護士・社労士等）':['📋 サービス','👤 プロフィール','📰 お役立ち情報','📅 ご相談予約','📍 アクセス'],
+    '製造業':['⚙️ 製品紹介','🏭 工場・現場','👷 職人紹介','📦 導入事例','📞 お問い合わせ'],
+    '小売・物販':['🛍️ 新着商品','⭐ 人気商品','📦 ご購入方法','💌 お客様の声','📍 店舗情報'],
+    '医療・クリニック':['🏥 診療内容','👨‍⚕️ 院長紹介','📅 診療時間','💬 患者様の声','📍 アクセス'],
+    '不動産':['🏠 物件情報','🗺️ エリア紹介','📋 サービス','💬 お客様の声','📅 ご相談'],
+    '整体・治療院':['💆 施術メニュー','👤 院長紹介','💬 お客様の声','📅 ご予約','📍 アクセス'],
+    '習い事・教室':['📚 レッスン','👩‍🏫 講師紹介','🎓 生徒さんの声','📅 体験予約','📍 教室案内'],
+    'サービス業':['📋 サービス','👤 スタッフ','💬 お客様の声','💰 料金','📅 お問い合わせ']
+  };
+  const list = industryMap[c.industry] || ['📋 サービス','👤 ご紹介','💬 お客様の声','📅 ご予約・お問い合わせ','📍 アクセス'];
+  return list.join('\n');
+}
+
+function shorten(s,n){ if(!s) return ''; return s.length>n ? s.slice(0,n)+'…' : s; }
+function pickStrengthWord(s){ if(!s) return '魅力'; return s.split(/[、,]/)[0].trim() || '魅力'; }
+
+function generatePosts(){
+  if(!requireClient()) return;
+  const c = currentClient;
+  const t = getToneStyle(c.tone);
+  document.getElementById('loading2').classList.add('show');
+  document.getElementById('outPosts').style.display = 'none';
+
+  setTimeout(()=>{
+    const post1 = `${t.e1} ${c.name} のアカウントをはじめました\n\nはじめまして！\n${c.area?c.area+'の':''}${c.industry||''}、${c.name}です。\n\n${shorten(c.concept,100)}\n\nこれから、${c.target?c.target+'のみなさまに':'みなさまに'}\n日々の出来事や、商品のこと、こだわりを\nゆっくりお届けしていきます。\n\nぜひフォローして、一緒に楽しんでくださいね${t.e2}`;
+
+    const post2 = `${t.e2} ${c.name}が大切にしていること\n\n${c.concept}\n\nこの想いがあるから、\n私たちは毎日この仕事を続けています。\n\n${c.strength?'特に大切にしているのが\n'+c.strength+'です。':''}\n\n${t.ending}`;
+
+    const post3 = `${t.e1} 私たちのサービス・商品紹介\n\n${c.name}でご提供しているのは：\n\n${c.strength||'丁寧なサービス'}\n\n${c.target?c.target+'にぴったり。':''}\nぜひ一度、体験してみてください。\n\n▼ 詳細はプロフィールから\n${c.url||''}`;
+
+    const tags = generateTags(c);
+
+    document.getElementById('o_post1').textContent = post1;
+    document.getElementById('o_post2').textContent = post2;
+    document.getElementById('o_post3').textContent = post3;
+    document.getElementById('o_tags').textContent = tags;
+
+    document.getElementById('loading2').classList.remove('show');
+    document.getElementById('outPosts').style.display = 'block';
+
+    currentClient.posts = { post1, post2, post3, tags };
+    saveData();
+    toast('📱 投稿サンプルを生成しました');
+  }, 1200);
+}
+
+function generateTags(c){
+  const base = ['#'+(c.name||'').replace(/\s+/g,'')];
+  const ind = {
+    '飲食店':['#グルメ','#カフェ','#ランチ','#ディナー','#おしゃれカフェ','#今日のごはん','#美味しい','#定食','#手作り料理'],
+    '美容室・サロン':['#ヘアサロン','#美容室','#ヘアスタイル','#ヘアアレンジ','#美容','#ヘアケア','#髪型','#トレンドヘア'],
+    '士業（税理士・弁護士・社労士等）':['#税理士','#法律相談','#経営','#中小企業','#起業','#節税','#士業','#相続'],
+    '製造業':['#ものづくり','#町工場','#職人','#日本製','#メイドインジャパン','#技術','#精密加工'],
+    '小売・物販':['#ショッピング','#新商品','#おしゃれ','#雑貨','#お買い物','#おすすめ'],
+    '医療・クリニック':['#健康','#予防医療','#クリニック','#健康診断','#医療'],
+    '不動産':['#不動産','#住まい','#マイホーム','#引っ越し','#新生活'],
+    '整体・治療院':['#整体','#マッサージ','#リラクゼーション','#健康','#肩こり','#腰痛'],
+    '習い事・教室':['#習い事','#レッスン','#教室','#趣味','#新しい挑戦'],
+    'サービス業':['#サービス','#お役立ち','#プロの仕事']
+  };
+  const indTags = ind[c.industry] || ['#おすすめ','#プロの仕事'];
+  const areaClean = (c.area||'').replace(/[都道府県市区町村\s]/g,'');
+  const areaTag = areaClean ? ['#'+areaClean.slice(0,8), '#'+areaClean.slice(0,4)+'グルメ'] : [];
+  const target = c.target ? ['#'+c.target.replace(/\s+/g,'').slice(0,10)] : [];
+  const general = ['#日常','#暮らし','#今日の一枚','#ライフスタイル','#日々のこと','#小さな幸せ','#ていねいな暮らし','#しあわせ時間','#おすすめ','#お気に入り','#instagood','#instalike','#日本','#japan'];
+  const all = [...base, ...indTags, ...areaTag, ...target, ...general].slice(0,30);
+  return all.join(' ');
+}
+
+function renderProposal(){
+  const doc = document.getElementById('proposalDoc');
+  if(!currentClient){
+    doc.innerHTML = `<div class="empty-state"><div class="empty-emoji">📄</div><div class="empty-title">クライアントを選択してください</div></div>`;
+    return;
+  }
+  const c = currentClient;
+  if(!c.profile && !c.posts){
+    doc.innerHTML = `<div class="empty-state"><div class="empty-emoji">📄</div><div class="empty-title">まだ生成データがありません</div><div class="empty-desc">STEP 02・03 で生成してから戻ってください</div></div>`;
+    return;
+  }
+  const today = new Date().toLocaleDateString('ja-JP');
+  doc.innerHTML = `
+    <div class="proposal-header">
+      <h2>${escapeHtml(c.name)} 様｜SNS立ち上げご提案</h2>
+      <p>作成日：${today}　／　Smile Plus Consulting</p>
+    </div>
+
+    <div class="proposal-section">
+      <h3>1. ブランド概要</h3>
+      <p>業種：${escapeHtml(c.industry||'-')}
+地域：${escapeHtml(c.area||'-')}
+ターゲット：${escapeHtml(c.target||'-')}
+ブランドトーン：${escapeHtml(c.tone||'-')}
+
+【想い・こだわり】
+${escapeHtml(c.concept||'-')}
+
+【強み・得意】
+${escapeHtml(c.strength||'-')}</p>
+    </div>
+
+    ${c.profile ? `
+    <div class="proposal-section">
+      <h3>2. アカウント名候補</h3>
+      <p>${escapeHtml(c.profile.acct)}</p>
+    </div>
+
+    <div class="proposal-section">
+      <h3>3. プロフィール文（Instagram）</h3>
+      <p>${escapeHtml(c.profile.igProf)}</p>
+    </div>
+
+    <div class="proposal-section">
+      <h3>4. プロフィール文（X / Threads）</h3>
+      <p>【X】
+${escapeHtml(c.profile.xProf)}
+
+【Threads】
+${escapeHtml(c.profile.thProf)}</p>
+    </div>
+
+    <div class="proposal-section">
+      <h3>5. ハイライト構成案</h3>
+      <p>${escapeHtml(c.profile.hl)}</p>
+    </div>
+    ` : ''}
+
+    ${c.posts ? `
+    <div class="proposal-section">
+      <h3>6. 初投稿サンプル</h3>
+      <p>【投稿1：あいさつ】
+${escapeHtml(c.posts.post1)}
+
+【投稿2：想い】
+${escapeHtml(c.posts.post2)}
+
+【投稿3：商品紹介】
+${escapeHtml(c.posts.post3)}</p>
+    </div>
+
+    <div class="proposal-section">
+      <h3>7. 推奨ハッシュタグ</h3>
+      <p>${escapeHtml(c.posts.tags)}</p>
+    </div>
+    ` : ''}
+
+    <div class="proposal-footer">
+      この提案書は「代行みっけ」により生成されました。<br>
+      Smile Plus Consulting / 「考えるを、ひとりにしない」
+    </div>
+  `;
+}
+
+function showProfileOutput(p){
+  document.getElementById('o_acct').textContent = p.acct||'';
+  document.getElementById('o_igprof').textContent = p.igProf||'';
+  document.getElementById('o_xprof').textContent = p.xProf||'';
+  document.getElementById('o_thprof').textContent = p.thProf||'';
+  document.getElementById('o_hl').textContent = p.hl||'';
+  document.getElementById('o_story').textContent = p.story||'';
+  document.getElementById('outProfile').style.display = 'block';
+}
+function showPostsOutput(p){
+  document.getElementById('o_post1').textContent = p.post1||'';
+  document.getElementById('o_post2').textContent = p.post2||'';
+  document.getElementById('o_post3').textContent = p.post3||'';
+  document.getElementById('o_tags').textContent = p.tags||'';
+  document.getElementById('outPosts').style.display = 'block';
+}
+
+function copyProposal(){
+  const txt = document.getElementById('proposalDoc').innerText;
+  navigator.clipboard.writeText(txt).then(()=>toast('📋 提案書をコピーしました'));
+}
+
+function copyText(id, btn){
+  const el = document.getElementById(id);
+  if(!el) return;
+  navigator.clipboard.writeText(el.textContent).then(()=>{
+    btn.textContent='✅ コピー済み';
+    btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent='📋 コピー';btn.classList.remove('copied')},1500);
+  });
+}
+
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+function escapeHtml(s){
+  if(s==null) return '';
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function openHelp(){ document.getElementById('helpModal').classList.add('show'); }
+function closeHelp(){ document.getElementById('helpModal').classList.remove('show'); }
+
+function resetAll(){
+  if(!confirm('すべてのクライアントデータを削除します。よろしいですか？')) return;
+  appData = { clients:{}, currentId:null };
+  saveData();
+  refreshClientSelect();
+  showEmpty(true);
+  document.getElementById('outProfile').style.display = 'none';
+  document.getElementById('outPosts').style.display = 'none';
+  renderProposal();
+  toast('🔄 全データを削除しました');
+}
+
+loadData();
+refreshClientSelect();
+if(appData.currentId && appData.clients[appData.currentId]){
+  switchClient(appData.currentId);
+}else{
+  showEmpty(true);
+}
+
+['f_name','f_industry','f_area','f_target','f_concept','f_strength','f_ng','f_sns','f_url'].forEach(id=>{
+  const el = document.getElementById(id);
+  if(el) el.addEventListener('blur', ()=>{ if(appData.currentId) saveCurrentClient(); });
+});
+
+document.querySelectorAll('.modal-overlay').forEach(o=>{
+  o.addEventListener('click', e=>{ if(e.target===o) o.classList.remove('show'); });
+});
+
+document.getElementById('newClientName').addEventListener('keypress', e=>{
+  if(e.key==='Enter') addClient();
+});
+</script>
+</body>
+</html>
